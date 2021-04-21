@@ -3,14 +3,13 @@
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
+// weather data is an object
 const weather = require('./data/weather.json')
-
 const app = express();
+const PORT = process.env.PORT || 3002;
+const superagent = require('superagent');
 
 app.use(cors());
-
-const PORT = process.env.PORT || 3002;
-
 
 
 app.get('/', (request, response) => {
@@ -18,27 +17,52 @@ app.get('/', (request, response) => {
   response.send('hello!');
 });
 
-app.get('/weather', (request, response) => {
-  console.log(request.query);
-  const weatherArray = weather.data.map(day => new Forecast(day));
-  response.send(weatherArray);
-});
+
+// // weather placeholder
+// app.get('/weather', (request, response) => {
+//   console.log(request.query);
+//   const weatherArray = weather.data.map(day => new Forecast(day));
+//   response.send(weatherArray);
+// });
 
 
-function Forecast(day) {
-  this.date = this.date = day.valid_date;
-  this.description = day.weather.description;
+// function Forecast(day) {
+//   this.date = this.date = day.valid_date;
+//   this.description = day.weather.description;
+// }
+
+
+
+// real-time weather, learned during lecture
+app.get('/weather', getWeatherHandler);
+
+async function getWeatherHandler(request, response) {
+  const lat = request.query;
+  const lon = request.query;
+  const key = process.env.WEATHER_API_KEY;
+
+  const url = `http://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${key}`;
+
+  const weatherResponse = await superagent.get(url);
+  const weatherObject = JSON.parse(weatherResponse.text);
+  const weatherArray = weatherObject.data;
+  const forecasts = weatherArray.map(day => new Forecast(day))
+  
+  response.send(forecasts);
+}
+
+class Forecast {
+  constructor(day) {
+    this.forecast = day.weather.description;
+    this.time = day.datetime;
+  }
 }
 
 
 
 // every other GET request will result in a 404
 app.get('*', (request, response) => {
-  response.status(404).send('error: something went wrong');
-})
-
-app.get('*', (request, response) => {
-  response.status(500).send('error: something went wrong');
+  response.status(400, 404, 500).send('error: something went wrong');
 })
 
 
