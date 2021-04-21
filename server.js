@@ -18,17 +18,29 @@ app.get('/', (request, response) => {
 });
 
 
+// Commented out from Lab07 below:
 // // weather placeholder
 // app.get('/weather', (request, response) => {
 //   console.log(request.query);
-//   const weatherArray = weather.data.map(day => new Forecast(day));
-//   response.send(weatherArray);
+  
+//   try {
+//     const weatherArray = weather.data.map(day => new Forecast(day));
+//     response.status(200).send(weatherArray);
+//   }
+//   catch (err) {
+//     response.send(errorHandler(err));
+//   }
 // });
 
 
 // function Forecast(day) {
 //   this.date = this.date = day.valid_date;
 //   this.description = day.weather.description;
+// }
+
+
+// function errorHandler(err) {
+//   console.log(err, 'error: something went wrong');
 // }
 
 
@@ -47,7 +59,7 @@ async function getWeatherHandler(request, response) {
   const weatherObject = JSON.parse(weatherResponse.text);
   const weatherArray = weatherObject.data;
   const forecasts = weatherArray.map(day => new Forecast(day))
-  
+
   response.send(forecasts);
 }
 
@@ -57,7 +69,6 @@ class Forecast {
     this.time = day.datetime;
   }
 }
-
 
 
 // every other GET request will result in a 404
