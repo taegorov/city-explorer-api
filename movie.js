@@ -3,29 +3,44 @@
 require('dotenv').config();
 const superagent = require('superagent');
 
+// ============ Memory Database =========== //
+const inMemoryDB = {};
 
+
+// ============ Movie Handler =========== //
 async function getMovieHandler(request, response) {
-  // try {
 
-    const cityName = request.query.cityName;
 
-    const movieKey = process.env.MOVIE_API_KEY;
+  // ==== API info ==== //
+  const cityName = request.query.cityName;
 
-    const url = `https://api.themoviedb.org/3/search/movie?query=${cityName}&api_key=${movieKey}`;
+  try {
+    const movieAlreadyFound = inMemoryDB[cityName] !== undefined;
 
-    const movieResponse = await superagent.get(url);
-    const movieObject = JSON.parse(movieResponse.text);
-    const movieArray = movieObject.results;
-    const topMovies = movieArray.map(movie => new Movies(movie))
+    if (movieAlreadyFound) {
+      const topMovies = inMemoryDB[cityName];
+      response.status(200).send(topMovies);
 
-    response.send(topMovies);
-  // } catch (error) {
-  //   console.log(error);
-  //   response.send('Oops! Something broke.')
-  // }
+    } else {
+      const movieKey = process.env.MOVIE_API_KEY;
+      const url = `https://api.themoviedb.org/3/search/movie?query=${cityName}&api_key=${movieKey}`;
+
+      const movieResponse = await superagent.get(url);
+      const movieObject = JSON.parse(movieResponse.text);
+      const movieArray = movieObject.results;
+
+      const topMovies = movieArray.map(movie => new Movies(movie))
+      inMemoryDB[cityName] = topMovies;
+      response.status(200).send(topMovies);
+    }
+  } catch (error) {
+    console.log(error);
+    response.status(500).send('Oops, Movies broke.')
+  }
 }
 
 
+// ========== constructor/class ========== //
 class Movies {
   constructor(movie) {
     this.title = movie.title;
