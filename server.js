@@ -1,26 +1,26 @@
 'use strict'
 
+// ==================== dependencies ===================== //
 const express = require('express');
 require('dotenv').config();
 const cors = require('cors');
-const app = express();
-const PORT = process.env.PORT || 3002;
-
 
 // weather data is an object
-// const weather = require('./data/weather.json');
 const getWeatherHandler = require('./weather');
 const getMovieHandler = require('./movie');
-// const Forecast = require('./weather.js');
-// const Movies = require('./movie.js');
 
+
+// ==================== set up app ===================== //
+const app = express();
+const PORT = process.env.PORT || 3002;
 
 app.use(cors());
 
 
+// ==================== routes ===================== //
 app.get('/', (request, response) => {
   //response object calls its send method
-  response.send('hello!');
+  response.status(200).send('hello!');
 });
 
 // real-time weather, learned during lecture
@@ -34,7 +34,7 @@ app.get('*', (request, response) => {
 })
 
 
-
+// ==================== listen ===================== //
 
 // KEEP AT BOTTOM - stay alive, listen, keep ears open for any request. rather than running one time only and stopping. "by virtue of listening, we keep it alive"
-app.listen(PORT, () => console.log(`listening on ${PORT}`));
+app.listen(PORT, () => console.log(`Listening on ${PORT}`));
