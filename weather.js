@@ -16,14 +16,32 @@ async function getWeatherHandler(request, response) {
   const lon = request.query.lon;
 
   try {
-    const weatherAlreadyFound = inMemoryDB[lat + lon] !== undefined;
+    const weatherAlreadyFound = inMemoryDB[lat + lon] !== undefined
 
     if (weatherAlreadyFound) {
-      const forecasts = inMemoryDB[lat + lon];
-      response.status(200).send(forecasts);
-      console.log('in memory db', inMemoryDB);
+
+      if (inMemoryDB[lat + lon].timestamp + 5000 < Date.now()) {
+        console.log('old weather data')
+        const key = process.env.WEATHER_API_KEY;
+        const url = `http://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${key}`;
+  
+        const weatherResponse = await superagent.get(url);
+        const weatherObject = JSON.parse(weatherResponse.text);
+        const weatherArray = weatherObject.data;
+  
+        const forecasts = weatherArray.map(day => new WeatherDay(day))
+        inMemoryDB[lat + lon] = { forecasts, timestamp: Date.now() };
+        response.status(200).send(inMemoryDB[lat + lon].forecasts);
+
+      } else {
+        console.log('good weather data')
+        const forecasts = inMemoryDB[lat + lon].forecasts;
+        response.status(200).send(forecasts);
+        // console.log('in memory db', inMemoryDB);
+      }
 
     } else {
+      console.log('no weather data')
       const key = process.env.WEATHER_API_KEY;
       const url = `http://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${key}`;
 
@@ -32,8 +50,8 @@ async function getWeatherHandler(request, response) {
       const weatherArray = weatherObject.data;
 
       const forecasts = weatherArray.map(day => new WeatherDay(day))
-      inMemoryDB[lat + lon] = forecasts;
-      response.status(200).send(forecasts);
+      inMemoryDB[lat + lon] = { forecasts, timestamp: Date.now() };
+      response.status(200).send(inMemoryDB[lat + lon].forecasts);
     }
   } catch (error) {
     console.log(error);
