@@ -34,14 +34,14 @@ async function getWeatherHandler(request, response) {
         response.status(200).send(inMemoryDB[lat + lon].forecasts);
 
       } else {
-        console.log('good movie data')
+        console.log('good weather data')
         const forecasts = inMemoryDB[lat + lon].forecasts;
         response.status(200).send(forecasts);
         // console.log('in memory db', inMemoryDB);
       }
 
     } else {
-      console.log('no movie data')
+      console.log('no weather data')
       const key = process.env.WEATHER_API_KEY;
       const url = `http://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${key}`;
 
